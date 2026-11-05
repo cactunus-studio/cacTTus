@@ -22,6 +22,10 @@ public class SearchRoutingTest {
         if(!url.equals(SearchRouting.restoreSim(url,null)))throw new AssertionError("Invented SIM country");
         String feed=url.replace("/aweme/v2/search/general/single/","/aweme/v1/feed/");
         if(!feed.equals(SearchRouting.restoreSim(feed,"ru")))throw new AssertionError("Feed changed");
+        if(!"a%2Bb+c".equals(SearchRouting.restoreField("keyword","a%2Bb+c","ru")))throw new AssertionError("POST keyword changed");
+        if(!"RU".equals(SearchRouting.restoreField("carrier_region","KZ","ru")))throw new AssertionError("POST SIM not restored");
+        if(!"ru".equals(SearchRouting.restoreField("sim%5Fregion","kz","ru")))throw new AssertionError("Encoded form name not handled");
+        if(!"abc%2F123".equals(SearchRouting.restoreField("token","abc%2F123","ru")))throw new AssertionError("POST token changed");
         System.out.println("PASS: search-only region consistency; feed/login/unrelated hosts unchanged");
     }
 }

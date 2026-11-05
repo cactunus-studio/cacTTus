@@ -36,10 +36,36 @@ public final class Entry {
         if(request==null)return null;
         try {
             String url=(String)request.getClass().getMethod("getUrl").invoke(request);
-            String changed=SearchRouting.restoreSim(url,Menu.deviceCountry());
-            if(url.equals(changed))return request;
+            if(!SearchRouting.isSearch(url))return request;
+            String device=Menu.deviceCountry();
+            String changed=SearchRouting.restoreSim(url,device);
+            Object newBody=null;
+            String method=(String)request.getClass().getMethod("getMethod").invoke(request);
+            if("POST".equals(method)){
+                Object body=request.getClass().getMethod("getRequestBody").invoke(request);
+                if(body!=null&&body.getClass().getName().equals("X.07Hx")){
+                    java.util.List<String> names=(java.util.List<String>)body.getClass().getField("LIZ").get(body);
+                    java.util.List<String> values=(java.util.List<String>)body.getClass().getField("LIZIZ").get(body);
+                    java.util.ArrayList<String> restored=new java.util.ArrayList<String>(values);
+                    boolean modified=false;
+                    for(int i=0;i<names.size();i++){
+                        String value=SearchRouting.restoreField(names.get(i),values.get(i),device);
+                        if(!value.equals(values.get(i))){restored.set(i,value);modified=true;}
+                    }
+                    if(modified)newBody=body.getClass().getConstructor(java.util.List.class,java.util.List.class)
+                        .newInstance(new java.util.ArrayList<String>(names),restored);
+                }
+            }
+            if(url.equals(changed)&&newBody==null)return request;
             Object builder=request.getClass().getMethod("newBuilder").invoke(request);
-            builder.getClass().getMethod("LIZJ",String.class).invoke(builder,changed);
+            if(!url.equals(changed))builder.getClass().getMethod("LIZJ",String.class).invoke(builder,changed);
+            if(newBody!=null){
+                ClassLoader loader=builder.getClass().getClassLoader();
+                Class<?> bodyContract=Class.forName("X.05mg",false,loader);
+                Object output=Class.forName("X.0OxD",true,loader).getConstructor(bodyContract).newInstance(newBody);
+                Class<?> outputContract=Class.forName("com.bytedance.retrofit2.mime.TypedOutput",false,loader);
+                builder.getClass().getMethod("LIZIZ",outputContract,String.class).invoke(builder,output,method);
+            }
             return builder.getClass().getMethod("LIZ").invoke(builder);
         }catch(ReflectiveOperationException error){report(error);return request;}
         catch(RuntimeException error){report(error);return request;}

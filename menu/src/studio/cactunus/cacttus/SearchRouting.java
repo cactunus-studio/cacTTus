@@ -30,6 +30,15 @@ public final class SearchRouting {
         }catch(URISyntaxException e){return false;}
         catch(NullPointerException e){return false;}
     }
+    public static String restoreField(String encodedKey,String encodedValue,String device){
+        if(device==null||!device.matches("(?:[A-Za-z]{2})?"))return encodedValue;
+        String key;
+        try{key=java.net.URLDecoder.decode(encodedKey,"UTF-8");}
+        catch(java.io.UnsupportedEncodingException e){return encodedValue;}
+        catch(IllegalArgumentException e){return encodedValue;}
+        if(!key.equals("carrier_region")&&!key.equals("sim_region")&&!key.equals("carrier_region1")&&!key.equals("priority_region"))return encodedValue;
+        return encodedValue.matches("[A-Z]{2}")?device.toUpperCase(Locale.US):device.toLowerCase(Locale.US);
+    }
     /** Keep all original raw query bytes/order except already-present SIM country values. */
     public static String restoreSim(String url,String device){
         if(!isSearch(url)||device==null||!device.matches("(?:[A-Za-z]{2})?"))return url;
@@ -39,13 +48,8 @@ public final class SearchRouting {
         boolean changed=false;
         for(int i=0;i<parts.length;i++){
             int equals=parts[i].indexOf('=');if(equals<0)continue;
-            String key;
-            try{key=java.net.URLDecoder.decode(parts[i].substring(0,equals),"UTF-8");}
-            catch(java.io.UnsupportedEncodingException e){return url;}
-            catch(IllegalArgumentException e){continue;}
-            if(!key.equals("carrier_region")&&!key.equals("sim_region")&&!key.equals("carrier_region1"))continue;
             String old=parts[i].substring(equals+1);
-            String replacement=old.matches("[A-Z]{2}")?device.toUpperCase(Locale.US):device.toLowerCase(Locale.US);
+            String replacement=restoreField(parts[i].substring(0,equals),old,device);
             parts[i]=parts[i].substring(0,equals+1)+replacement;changed|=!old.equals(replacement);
         }
         if(!changed)return url;
