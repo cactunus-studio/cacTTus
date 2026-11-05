@@ -14,6 +14,7 @@ class InjectionTest(unittest.TestCase):
           'smali_classes32/com/ss/android/ugc/aweme/setting/ui/SettingContainerActivity.smali': '    invoke-super {p0}, Lbase/Activity;->onResume()V' if valid else 'unexpected lifecycle',
           'smali_classes2/X/03NM.smali': '    const-string v7, "kz"',
           'smali_classes4/X/06VU.smali': '    const-string v0, "kz"',
+          'smali_classes8/com/ss/android/ugc/aweme/discover/model/SearchApiResult.smali': '.method public getSearchNilInfo()Lcom/ss/android/ugc/aweme/discover/model/SearchNilInfo;\n    .locals 1\n.end method\n.method public getSearchNilText()Lcom/ss/android/ugc/aweme/discover/model/SearchNilText;\n    .locals 1\n.end method',
           'smali_classes20/X/0fk3.smali': '    const-string v0, "kz"',
         }
         for name,text in paths.items():

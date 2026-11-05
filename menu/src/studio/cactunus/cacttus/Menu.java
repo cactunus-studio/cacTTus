@@ -110,6 +110,10 @@ public final class Menu {
         for(int i=0;i<CODES.length;i++) if(CODES[i].equals(selected)) regions.setSelection(i);
         panel.addView(regions,new LinearLayout.LayoutParams(-1,dp(a,56)));
         panel.addView(label(ui,"Казахстан включён по умолчанию. При подмене страны поиск может не работать. Выбранный регион применяется после перезапуска. Настройки не меняют IP-адрес.",14,secondary));
+        Button diagnostic=new Button(ui);diagnostic.setText("Диагностика поиска");panel.addView(diagnostic);
+        diagnostic.setOnClickListener(new View.OnClickListener(){public void onClick(View v){
+            SearchDiagnostics.show(a,"region="+prefs().getString("region","kz")+"\noverride="+prefs().getBoolean("override",true)+"\nnetwork_override="+prefs().getBoolean("network_override",false));
+        }});
         Button save=new Button(ui); save.setText("Сохранить"); save.setTextColor(ink);
         save.setBackgroundDrawable(shape(accent,a)); panel.addView(save,new LinearLayout.LayoutParams(-1,dp(a,52)));
         save.setOnClickListener(new View.OnClickListener(){public void onClick(View v){

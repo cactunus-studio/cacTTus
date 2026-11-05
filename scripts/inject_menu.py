@@ -30,6 +30,13 @@ source, count = re.subn(r'(    invoke-super \{p0\}, [^\n]+->onResume\(\)V)',
 if count != 1:
     raise SystemExit(f'Expected one settings hook, found {count}')
 changes.append((settings, source))
+response, = root.glob('smali*/com/ss/android/ugc/aweme/discover/model/SearchApiResult.smali')
+source=response.read_text()
+for getter, result in [('getSearchNilInfo','Lcom/ss/android/ugc/aweme/discover/model/SearchNilInfo;'),('getSearchNilText','Lcom/ss/android/ugc/aweme/discover/model/SearchNilText;')]:
+    pattern=r'(\.method public '+getter+r'\(\)'+re.escape(result)+r'\n    \.locals 1)'
+    source,count=re.subn(pattern,lambda m:m[1]+'\n\n    invoke-static {p0}, Lstudio/cactunus/cacttus/Entry;->searchResult(Ljava/lang/Object;)V',source)
+    if count!=1:raise SystemExit(f'Expected one {getter}, found {count}')
+changes.append((response,source))
 # The menu goes in its own DEX to avoid overflowing existing method references.
 destination = root/'smali_classes58'
 if destination.exists():

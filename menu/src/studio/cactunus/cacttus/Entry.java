@@ -26,6 +26,11 @@ public final class Entry {
         catch (RuntimeException error) { report(error); return original; }
         catch (LinkageError error) { report(error); return original; }
     }
+    public static void searchResult(Object response) {
+        try { SearchDiagnostics.record(response); }
+        catch (RuntimeException error) { report(error); }
+        catch (LinkageError error) { report(error); }
+    }
     private static void menuReport(Activity activity,Throwable error) {
         report(error);
         try { CrashReport.menuError(activity,"Settings entry",error); }

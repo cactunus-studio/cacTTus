@@ -60,6 +60,7 @@ public final class CrashReport {
         } catch (RuntimeException unavailable) { Log.e("cacTTus","Cannot schedule diagnostic",unavailable); }
         catch (LinkageError unavailable) { Log.e("cacTTus","Cannot load diagnostic",unavailable); }
     }
+    public static void showDiagnostic(Activity activity,String report) { show(activity,report,false); }
     private static void pending(Activity activity) {
         try {
             if (application == null || activity.isFinishing() || visible) return;
@@ -75,7 +76,7 @@ public final class CrashReport {
             text.setTextIsSelectable(true); text.setPadding(24,16,24,16);
             ScrollView scroll=new ScrollView(activity); scroll.addView(text);
             AlertDialog dialog=new AlertDialog.Builder(activity)
-                .setTitle(saved ? "Журнал предыдущего вылета" : "Ошибка меню cacTTus")
+                .setTitle(saved ? "Журнал предыдущего вылета" : "Диагностика cacTTus")
                 .setView(scroll).setPositiveButton("Скопировать лог",new DialogInterface.OnClickListener(){
                     public void onClick(DialogInterface d,int which){
                         try {
