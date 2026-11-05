@@ -90,6 +90,12 @@ public final class Menu {
         final Switch network = new Switch(ui); network.setText("Подменять страну сети");
         network.setTextColor(ink); network.setChecked(prefs().getBoolean("network_override",false));
         panel.addView(network);
+        panel.addView(label(ui,"Экран и время",18,ink));
+        final Switch pixelShift=new Switch(ui);pixelShift.setText("Антивыгорание: сдвиг пикселей");pixelShift.setTextColor(ink);
+        pixelShift.setChecked(prefs().getBoolean("pixel_shift",false));panel.addView(pixelShift);
+        panel.addView(label(ui,"Сдвиг на 2 пикселя каждую минуту. Не гарантирует защиту OLED.",13,secondary));
+        final Switch reminder=new Switch(ui);reminder.setText("Напоминать о перерыве каждые 20 минут");reminder.setTextColor(ink);
+        reminder.setChecked(prefs().getBoolean("break_reminder",false));panel.addView(reminder);
         panel.addView(label(ui,"Регион",18,ink));
         final Spinner regions = new Spinner(ui);
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(ui,android.R.layout.simple_spinner_item,NAMES);
@@ -101,7 +107,8 @@ public final class Menu {
         Button save=new Button(ui); save.setText("Сохранить"); save.setTextColor(ink);
         save.setBackgroundDrawable(shape(accent,a)); panel.addView(save,new LinearLayout.LayoutParams(-1,dp(a,52)));
         save.setOnClickListener(new View.OnClickListener(){public void onClick(View v){
-            prefs().edit().putBoolean("network_override",network.isChecked()).putBoolean("override",enabled.isChecked()).putString("region",CODES[regions.getSelectedItemPosition()]).apply();
+            prefs().edit().putBoolean("pixel_shift",pixelShift.isChecked()).putBoolean("break_reminder",reminder.isChecked()).putBoolean("network_override",network.isChecked()).putBoolean("override",enabled.isChecked()).putString("region",CODES[regions.getSelectedItemPosition()]).apply();
+            ScreenCare.refresh();
             Toast.makeText(a,"Сохранено. Перезапусти TikTok",Toast.LENGTH_LONG).show(); dialog.dismiss();
         }});
         ScrollView scroll = new ScrollView(ui); scroll.addView(panel); dialog.setContentView(scroll); dialog.show();

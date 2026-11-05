@@ -7,12 +7,12 @@ import android.util.Log;
 public final class Entry {
     private Entry() {}
     public static void install(Activity activity) {
-        try { CrashReport.install(activity); Menu.install(activity); }
+        try { CrashReport.install(activity); ScreenCare.install(activity); Menu.install(activity); }
         catch (RuntimeException error) { report(error); }
         catch (LinkageError error) { report(error); }
     }
     public static void settings(Activity activity) {
-        try { CrashReport.install(activity); Menu.settings(activity); }
+        try { CrashReport.install(activity); ScreenCare.install(activity); Menu.settings(activity); }
         catch (RuntimeException error) { menuReport(activity,error); }
         catch (LinkageError error) { menuReport(activity,error); }
     }
