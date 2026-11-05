@@ -30,6 +30,29 @@ public final class SearchRouting {
         }catch(URISyntaxException e){return false;}
         catch(NullPointerException e){return false;}
     }
+    /** Keep all original raw query bytes/order except already-present SIM country values. */
+    public static String restoreSim(String url,String device){
+        if(!isSearch(url)||device==null||!device.matches("(?:[A-Za-z]{2})?"))return url;
+        int query=url.indexOf('?');if(query<0)return url;
+        int fragment=url.indexOf('#',query);if(fragment<0)fragment=url.length();
+        String[] parts=url.substring(query+1,fragment).split("&",-1);
+        boolean changed=false;
+        for(int i=0;i<parts.length;i++){
+            int equals=parts[i].indexOf('=');if(equals<0)continue;
+            String key;
+            try{key=java.net.URLDecoder.decode(parts[i].substring(0,equals),"UTF-8");}
+            catch(java.io.UnsupportedEncodingException e){return url;}
+            catch(IllegalArgumentException e){continue;}
+            if(!key.equals("carrier_region")&&!key.equals("sim_region")&&!key.equals("carrier_region1"))continue;
+            String old=parts[i].substring(equals+1);
+            String replacement=old.matches("[A-Z]{2}")?device.toUpperCase(Locale.US):device.toLowerCase(Locale.US);
+            parts[i]=parts[i].substring(0,equals+1)+replacement;changed|=!old.equals(replacement);
+        }
+        if(!changed)return url;
+        StringBuilder result=new StringBuilder(url.substring(0,query+1));
+        for(int i=0;i<parts.length;i++){if(i>0)result.append('&');result.append(parts[i]);}
+        return result.append(url.substring(fragment)).toString();
+    }
     public static String choose(String url,String original,String selected){
         if(!isSearch(url)||selected==null||!selected.matches("[A-Za-z]{2}"))return original;
         return original!=null&&original.matches("[A-Z]{2}")?selected.toUpperCase(Locale.US):selected.toLowerCase(Locale.US);

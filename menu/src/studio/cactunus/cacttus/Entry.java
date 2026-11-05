@@ -32,10 +32,23 @@ public final class Entry {
         catch (RuntimeException error) { report(error); }
         catch (LinkageError error) { report(error); }
     }
+    public static Object searchRequest(Object request){
+        if(request==null)return null;
+        try {
+            String url=(String)request.getClass().getMethod("getUrl").invoke(request);
+            String changed=SearchRouting.restoreSim(url,Menu.deviceCountry());
+            if(url.equals(changed))return request;
+            Object builder=request.getClass().getMethod("newBuilder").invoke(request);
+            builder.getClass().getMethod("LIZJ",String.class).invoke(builder,changed);
+            return builder.getClass().getMethod("LIZ").invoke(builder);
+        }catch(ReflectiveOperationException error){report(error);return request;}
+        catch(RuntimeException error){report(error);return request;}
+        catch(LinkageError error){report(error);return request;}
+    }
     public static String searchRegion(Object request,String original) {
         try {
             String url=(String)request.getClass().getMethod("getUrl").invoke(request);
-            String selected=SearchRouting.choose(url,original,Menu.country(original));
+            String selected=SearchRouting.choose(url,original,Menu.deviceCountry());
             if(SearchRouting.isSearch(url))SearchDiagnostics.routing(original,selected);
             return selected;
         } catch (ReflectiveOperationException error) { report(error);return original; }

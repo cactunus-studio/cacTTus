@@ -16,6 +16,12 @@ public class SearchRoutingTest {
         expect("http://search.tiktokv.com/aweme/v1/search/","RU","kz","RU");
         expect("https://search.tiktokv.com/aweme/v1/search/","RU","invalid","RU");
         expect("https://search.tiktokv.com/aweme/v1/search/","RU","RU","RU");
+        String url="https://search.tiktokv.com/aweme/v2/search/general/single/?keyword=a%2Bb%20c&carrier_region=KZ&sim_region=kz&count=20&token=x%2Fy#anchor";
+        String wanted="https://search.tiktokv.com/aweme/v2/search/general/single/?keyword=a%2Bb%20c&carrier_region=RU&sim_region=ru&count=20&token=x%2Fy#anchor";
+        if(!wanted.equals(SearchRouting.restoreSim(url,"ru")))throw new AssertionError("Encoded query changed");
+        if(!url.equals(SearchRouting.restoreSim(url,null)))throw new AssertionError("Invented SIM country");
+        String feed=url.replace("/aweme/v2/search/general/single/","/aweme/v1/feed/");
+        if(!feed.equals(SearchRouting.restoreSim(feed,"ru")))throw new AssertionError("Feed changed");
         System.out.println("PASS: search-only region consistency; feed/login/unrelated hosts unchanged");
     }
 }

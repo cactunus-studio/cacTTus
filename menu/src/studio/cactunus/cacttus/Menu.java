@@ -10,6 +10,7 @@ import android.widget.*;
 
 public final class Menu {
     private static volatile Application app;
+    private static volatile String deviceSim;
     private static final String[] CODES = {"kz", "us", "de", "tr", "gb", "jp"};
     private static final String[] NAMES = {"Казахстан", "США", "Германия", "Турция", "Великобритания", "Япония"};
     private static SharedPreferences prefs() { return app.getSharedPreferences("cacttus", 0); }
@@ -20,7 +21,11 @@ public final class Menu {
         for (String c : CODES) if (c.equals(code)) return code;
         return "kz";
     }
-    public static String simCountry(String original) { return country(original); }
+    public static String simCountry(String original) {
+        if(original!=null&&original.matches("(?:[A-Za-z]{2})?"))deviceSim=original;
+        return country(original);
+    }
+    public static String deviceCountry(){return deviceSim;}
     public static String networkCountry(String original) {
         if (app == null || !prefs().getBoolean("network_override", false)) return original;
         return country(original);
