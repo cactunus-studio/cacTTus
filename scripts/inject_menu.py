@@ -1,0 +1,31 @@
+#!/usr/bin/env python3
+"""Connect compiled menu smali and settings to the version-specific region patch."""
+import pathlib
+import re
+import shutil
+import sys
+root, compiled = map(pathlib.Path, sys.argv[1:])
+activity, = root.glob('smali*/com/ss/android/ugc/aweme/splash/SplashActivity.smali')
+s = activity.read_text()
+call = '    invoke-static {p0}, Lstudio/cactunus/cacttus/Menu;->install(Landroid/app/Activity;)V'
+if call in s:
+    raise SystemExit('Menu already installed')
+s, count = re.subn(r'(    invoke-super \{p0, p1\}, [^\n]+->onCreate\(Landroid/os/Bundle;\)V)',lambda m:m[1]+'\n\n'+call,s)
+if count != 1:
+    raise SystemExit(f'Expected one lifecycle hook, found {count}')
+changes = [(activity,s)]
+for name, register in [('smali_classes2/X/03NM.smali','v7'),('smali_classes4/X/06VU.smali','v0'),('smali_classes20/X/0fk3.smali','v0')]:
+    p = root/name
+    source = p.read_text()
+    old = f'    const-string {register}, "kz"'
+    if source.count(old) != 1:
+        raise SystemExit(f'{name}: expected one region patch')
+    new = f'    invoke-static {{{register}}}, Lstudio/cactunus/cacttus/Menu;->country(Ljava/lang/String;)Ljava/lang/String;\n\n    move-result-object {register}'
+    changes.append((p,source.replace(old,new)))
+# The menu goes in its own DEX to avoid overflowing existing method references.
+destination = root/'smali_classes58'
+if destination.exists():
+    raise SystemExit('DEX destination already exists')
+shutil.copytree(compiled/'smali',destination)
+for p, source in changes: p.write_text(source)
+print('Menu installed and region calls connected')
