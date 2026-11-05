@@ -10,7 +10,6 @@ import android.widget.*;
 
 public final class Menu {
     private static volatile Application app;
-    private static boolean installed;
     private static final String[] CODES = {"kz", "us", "de", "tr", "gb", "jp"};
     private static final String[] NAMES = {"Казахстан", "США", "Германия", "Турция", "Великобритания", "Япония"};
     private static SharedPreferences prefs() { return app.getSharedPreferences("cacttus", 0); }
@@ -21,21 +20,16 @@ public final class Menu {
         for (String c : CODES) if (c.equals(code)) return code;
         return "kz";
     }
-    public static void install(Activity activity) {
-        if (installed) return;
-        installed = true;
-        app = activity.getApplication();
-        app.registerActivityLifecycleCallbacks(new Application.ActivityLifecycleCallbacks() {
-            public void onActivityResumed(final Activity a) {
-                if (a.getClass().getName().contains("SplashActivity")) return;
-                a.getWindow().getDecorView().post(new Runnable() { public void run() { attach(a); } });
-            }
-            public void onActivityCreated(Activity a, Bundle b) {}
-            public void onActivityStarted(Activity a) {}
-            public void onActivityPaused(Activity a) {}
-            public void onActivityStopped(Activity a) {}
-            public void onActivitySaveInstanceState(Activity a, Bundle b) {}
-            public void onActivityDestroyed(Activity a) {}
+    public static String simCountry(String original) { return country(original); }
+    public static String networkCountry(String original) {
+        if (app == null || !prefs().getBoolean("network_override", false)) return original;
+        return country(original);
+    }
+    public static void install(Activity activity) { app = activity.getApplication(); }
+    public static void settings(final Activity activity) {
+        install(activity);
+        activity.getWindow().getDecorView().post(new Runnable() {
+            public void run() { attach(activity); }
         });
     }
     private static int dp(Context c, int v) { return (int)(v*c.getResources().getDisplayMetrics().density+0.5f); }
@@ -46,11 +40,24 @@ public final class Menu {
         if (a.isFinishing()) return;
         View root = a.findViewById(android.R.id.content);
         if (!(root instanceof android.view.ViewGroup) || root.findViewWithTag("cacttus-menu") != null) return;
-        TextView button = new TextView(a); button.setTag("cacttus-menu"); button.setText("🌵");
-        button.setGravity(Gravity.CENTER); button.setTextSize(22);
-        button.setContentDescription("Настройки cacTTus"); button.setBackgroundDrawable(shape(0xffd9e8c5,a));
-        FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(dp(a,48), dp(a,48), Gravity.TOP|Gravity.RIGHT);
-        params.setMargins(0,dp(a,48),dp(a,12),0);
+        TextView button = new TextView(a); button.setTag("cacttus-menu");
+        button.setText("cacTTus  ·  Регион и настройки  ›");
+        button.setTextColor(0xff20331b); button.setGravity(Gravity.CENTER_VERTICAL);
+        button.setPadding(dp(a,20),0,dp(a,20),0); button.setTextSize(16);
+        button.setContentDescription("Открыть настройки cacTTus");
+        button.setBackgroundDrawable(shape(systemColor(a,"system_accent1_100",0xffd9e8c5),a));
+        FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(-1,dp(a,64),Gravity.BOTTOM);
+        params.setMargins(dp(a,12),0,dp(a,12),dp(a,12));
+        // Reserve space below the settings content for the entry row.
+        ViewGroup container=(ViewGroup)root;
+        for(int i=0;i<container.getChildCount();i++) {
+            View child=container.getChildAt(i);
+            ViewGroup.LayoutParams lp=child.getLayoutParams();
+            if(lp instanceof FrameLayout.LayoutParams) {
+                FrameLayout.LayoutParams fl=(FrameLayout.LayoutParams)lp;
+                fl.bottomMargin += dp(a,88); child.setLayoutParams(fl);
+            }
+        }
         a.addContentView(button,params);
         button.setOnClickListener(new View.OnClickListener() { public void onClick(View v) { show(a); } });
     }
@@ -78,6 +85,9 @@ public final class Menu {
         panel.addView(label(ui,"Сделай ленту своей",15,secondary));
         final Switch enabled = new Switch(ui); enabled.setText("Подмена страны"); enabled.setTextColor(ink);
         enabled.setChecked(prefs().getBoolean("override",true)); panel.addView(enabled);
+        final Switch network = new Switch(ui); network.setText("Подменять страну сети");
+        network.setTextColor(ink); network.setChecked(prefs().getBoolean("network_override",false));
+        panel.addView(network);
         panel.addView(label(ui,"Регион",18,ink));
         final Spinner regions = new Spinner(ui);
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(ui,android.R.layout.simple_spinner_item,NAMES);
@@ -85,14 +95,14 @@ public final class Menu {
         String selected=prefs().getString("region","kz");
         for(int i=0;i<CODES.length;i++) if(CODES[i].equals(selected)) regions.setSelection(i);
         panel.addView(regions,new LinearLayout.LayoutParams(-1,dp(a,56)));
-        panel.addView(label(ui,"Казахстан выбран по умолчанию. После изменения перезапусти TikTok. Регион сети и аккаунта может влиять на результат.",14,secondary));
+        panel.addView(label(ui,"Страна сети по умолчанию не меняется. Если поиск не работает, отключи подмену страны и перезапусти TikTok. Настройки не меняют IP-адрес.",14,secondary));
         Button save=new Button(ui); save.setText("Сохранить"); save.setTextColor(ink);
         save.setBackgroundDrawable(shape(accent,a)); panel.addView(save,new LinearLayout.LayoutParams(-1,dp(a,52)));
         save.setOnClickListener(new View.OnClickListener(){public void onClick(View v){
-            prefs().edit().putBoolean("override",enabled.isChecked()).putString("region",CODES[regions.getSelectedItemPosition()]).apply();
+            prefs().edit().putBoolean("network_override",network.isChecked()).putBoolean("override",enabled.isChecked()).putString("region",CODES[regions.getSelectedItemPosition()]).apply();
             Toast.makeText(a,"Сохранено. Перезапусти TikTok",Toast.LENGTH_LONG).show(); dialog.dismiss();
         }});
-        dialog.setContentView(panel); dialog.show();
+        ScrollView scroll = new ScrollView(ui); scroll.addView(panel); dialog.setContentView(scroll); dialog.show();
         if(dialog.getWindow()!=null) { dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent); dialog.getWindow().setLayout(Math.min(dp(a,380),a.getResources().getDisplayMetrics().widthPixels-dp(a,32)),-2); }
     }
 }

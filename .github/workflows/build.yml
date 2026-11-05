@@ -17,26 +17,39 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
+      - name: Test patch compatibility checks
+        run: python3 -m unittest discover -s tests -v
       - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '21'
+      - uses: actions/cache@v4
+        with:
+          path: |
+            /tmp/source.apk
+            /tmp/apktool.jar
+            /tmp/signer.jar
+            /tmp/android.jar
+            /tmp/ecj.jar
+            /tmp/r8.jar
+            /tmp/pristine-decoded
+          key: cacttus-pristine-v1-${{ runner.os }}-3b68b645-apktool303
       - name: Download and verify source APK and tools
         env:
           APK_URL: ${{ inputs.apk_url || secrets.CACTTUS_APK_URL }}
         run: |
           set -eu
           python3 scripts/download_source.py /tmp/source.apk
-          curl -fsSL https://github.com/iBotPeaches/Apktool/releases/download/v3.0.3/apktool_3.0.3.jar -o /tmp/apktool.jar
+          test -f /tmp/apktool.jar || curl -fsSL https://github.com/iBotPeaches/Apktool/releases/download/v3.0.3/apktool_3.0.3.jar -o /tmp/apktool.jar
           echo 'dbf930b076c6b9be08d57c449cacefc3bdd6b71ebd59b3066fc0e1f5b14f9423  /tmp/apktool.jar' | sha256sum -c
-          curl -fsSL https://github.com/patrickfav/uber-apk-signer/releases/download/v1.3.0/uber-apk-signer-1.3.0.jar -o /tmp/signer.jar
+          test -f /tmp/signer.jar || curl -fsSL https://github.com/patrickfav/uber-apk-signer/releases/download/v1.3.0/uber-apk-signer-1.3.0.jar -o /tmp/signer.jar
           echo 'e1299fd6fcf4da527dd53735b56127e8ea922a321128123b9c32d619bba1d835  /tmp/signer.jar' | sha256sum -c
       - name: Compile menu
         run: |
           set -eu
-          curl -fsSL https://repo.maven.apache.org/maven2/com/google/android/android/4.1.1.4/android-4.1.1.4.jar -o /tmp/android.jar
-          curl -fsSL https://repo.maven.apache.org/maven2/org/eclipse/jdt/ecj/3.40.0/ecj-3.40.0.jar -o /tmp/ecj.jar
-          curl -fsSL https://dl.google.com/dl/android/maven2/com/android/tools/r8/8.7.18/r8-8.7.18.jar -o /tmp/r8.jar
+          test -f /tmp/android.jar || curl -fsSL https://repo.maven.apache.org/maven2/com/google/android/android/4.1.1.4/android-4.1.1.4.jar -o /tmp/android.jar
+          test -f /tmp/ecj.jar || curl -fsSL https://repo.maven.apache.org/maven2/org/eclipse/jdt/ecj/3.40.0/ecj-3.40.0.jar -o /tmp/ecj.jar
+          test -f /tmp/r8.jar || curl -fsSL https://dl.google.com/dl/android/maven2/com/android/tools/r8/8.7.18/r8-8.7.18.jar -o /tmp/r8.jar
           echo '84072541cbb711eff89f7277100ff854929a446dba7ceb1b195c340e0b4fd3cb  /tmp/android.jar' | sha256sum -c
           echo '05cc22a24e7982970f63a405fc6c820bc80b806f27f3c5a6236fc475f8f7152b  /tmp/ecj.jar' | sha256sum -c
           echo '58366f77067207c39a17d469de7b05701d2877212a9c55201bcb0af43e59e903  /tmp/r8.jar' | sha256sum -c
@@ -47,11 +60,15 @@ jobs:
           java -jar /tmp/apktool.jar d --no-res -o /tmp/menu-smali /tmp/menu.apk
       - name: Decode and patch
         run: |
-          java -Xmx6g -jar /tmp/apktool.jar d --no-res -j 2 -o /tmp/decoded /tmp/source.apk
+          if [ ! -d /tmp/pristine-decoded ]; then
+            java -Xmx6g -jar /tmp/apktool.jar d --no-res -j 2 -o /tmp/pristine-decoded /tmp/source.apk
+          fi
+          cp -a /tmp/pristine-decoded /tmp/decoded
           python3 scripts/patch_region.py /tmp/decoded
           python3 scripts/inject_menu.py /tmp/decoded /tmp/menu-smali
       - name: Build and sign
         run: |
+          python3 scripts/seed_dex.py /tmp/source.apk /tmp/decoded
           java -Xmx6g -jar /tmp/apktool.jar b -j 2 /tmp/decoded -o /tmp/cacttus.apk
           java -jar /tmp/signer.jar --apks /tmp/cacttus.apk --out /tmp/output
       - uses: actions/upload-artifact@v4

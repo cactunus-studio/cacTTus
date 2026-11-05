@@ -20,8 +20,16 @@ for name, register in [('smali_classes2/X/03NM.smali','v7'),('smali_classes4/X/0
     old = f'    const-string {register}, "kz"'
     if source.count(old) != 1:
         raise SystemExit(f'{name}: expected one region patch')
-    new = f'    invoke-static {{{register}}}, Lstudio/cactunus/cacttus/Menu;->country(Ljava/lang/String;)Ljava/lang/String;\n\n    move-result-object {register}'
+    method = 'networkCountry' if 'classes20/' in name else 'simCountry'
+    new = f'    invoke-static {{{register}}}, Lstudio/cactunus/cacttus/Menu;->{method}(Ljava/lang/String;)Ljava/lang/String;\n\n    move-result-object {register}'
     changes.append((p,source.replace(old,new)))
+settings, = root.glob('smali*/com/ss/android/ugc/aweme/setting/ui/SettingContainerActivity.smali')
+source = settings.read_text()
+source, count = re.subn(r'(    invoke-super \{p0\}, [^\n]+->onResume\(\)V)',
+    lambda m: m[1]+'\n\n    invoke-static {p0}, Lstudio/cactunus/cacttus/Menu;->settings(Landroid/app/Activity;)V', source)
+if count != 1:
+    raise SystemExit(f'Expected one settings hook, found {count}')
+changes.append((settings, source))
 # The menu goes in its own DEX to avoid overflowing existing method references.
 destination = root/'smali_classes58'
 if destination.exists():

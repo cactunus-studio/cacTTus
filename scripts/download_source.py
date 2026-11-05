@@ -28,6 +28,11 @@ url = os.environ.get('APK_URL') or DEFAULT
 if urlsplit(url).scheme != 'https':
     raise SystemExit('APK_URL must use HTTPS')
 destination = Path(sys.argv[1])
+if destination.exists():
+    with destination.open('rb') as cached:
+        if hashlib.file_digest(cached, 'sha256').hexdigest() == EXPECTED:
+            print('Cached source APK checksum verified')
+            raise SystemExit(0)
 partial = destination.with_suffix('.part')
 for attempt in range(2):
     with urlopen(url, timeout=120) as response:
