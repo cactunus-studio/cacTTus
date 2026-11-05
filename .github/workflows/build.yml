@@ -65,6 +65,7 @@ jobs:
           cp -a /tmp/pristine-decoded /tmp/decoded
           python3 scripts/patch_region.py /tmp/decoded
           python3 scripts/inject_menu.py /tmp/decoded /tmp/menu-smali
+          python3 scripts/patch_search_client.py /tmp/decoded
       - name: Build and sign
         run: |
           python3 scripts/register_activity.py /tmp/decoded/AndroidManifest.xml

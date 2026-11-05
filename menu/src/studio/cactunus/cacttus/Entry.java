@@ -26,6 +26,12 @@ public final class Entry {
         catch (RuntimeException error) { report(error); return original; }
         catch (LinkageError error) { report(error); return original; }
     }
+    public static void videoSearchBuilder(Object builder) {
+        try { SearchRouting.configure(builder); }
+        catch (ReflectiveOperationException error) { report(error); }
+        catch (RuntimeException error) { report(error); }
+        catch (LinkageError error) { report(error); }
+    }
     public static String searchRegion(Object request,String original) {
         try {
             String url=(String)request.getClass().getMethod("getUrl").invoke(request);
