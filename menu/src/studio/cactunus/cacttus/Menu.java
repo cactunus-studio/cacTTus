@@ -15,7 +15,7 @@ public final class Menu {
     private static SharedPreferences prefs() { return app.getSharedPreferences("cacttus", 0); }
     public static String country(String original) {
         if (app == null) return original;
-        if (!prefs().getBoolean("override", false)) return original;
+        if (!prefs().getBoolean("override", true)) return original;
         String code = prefs().getString("region", "kz");
         for (String c : CODES) if (c.equals(code)) return code;
         return "kz";
@@ -27,10 +27,9 @@ public final class Menu {
     }
     public static void install(Activity activity) {
         app = activity.getApplication();
-        // One-time migration: the old default breaks search on reported devices.
-        if (!prefs().getBoolean("search_safe_v1",false)) {
-            prefs().edit().putBoolean("override",false).putBoolean("network_override",false)
-                .putBoolean("search_safe_v1",true).apply();
+        // Restore the setting disabled by the search workaround, once only.
+        if (!prefs().getBoolean("restore_region_v1",false)) {
+            prefs().edit().putBoolean("override",true).putBoolean("restore_region_v1",true).apply();
         }
     }
     public static void settings(final Activity activity) {
@@ -62,7 +61,7 @@ public final class Menu {
         // Do not resize or reparent TikTok's own Compose/fragment content.
         ((ViewGroup)root).addView(button,params);
         button.setOnClickListener(new View.OnClickListener() { public void onClick(View v) {
-            try { show(a); }
+            try { a.startActivity(new Intent(a,SettingsActivity.class)); }
             catch (RuntimeException error) { Log.e("cacTTus", "Cannot open menu", error); CrashReport.menuError(a,"Open menu",error); }
             catch (LinkageError error) { Log.e("cacTTus", "Cannot load menu", error); CrashReport.menuError(a,"Load menu",error); }
         } });
@@ -77,7 +76,7 @@ public final class Menu {
         try { return c.getResources().getColor(id); }
         catch (android.content.res.Resources.NotFoundException error) { return fallback; }
     }
-    private static void show(final Activity a) {
+    public static void page(final Activity a) {
         boolean dark = (a.getResources().getConfiguration().uiMode & 48) == 32;
         int theme = a.getResources().getIdentifier(dark ? "Theme.Material.NoActionBar" : "Theme.Material.Light.NoActionBar", "style", "android");
         final Context ui = new ContextThemeWrapper(a, theme != 0 ? theme : (dark ? android.R.style.Theme_Holo : android.R.style.Theme_Holo_Light));
@@ -85,15 +84,15 @@ public final class Menu {
         int accent = systemColor(a, dark ? "system_accent1_700" : "system_accent1_100", dark ? 0xff384b2e : 0xffd9e8c5);
         int ink = dark ? 0xffe2ead9 : 0xff20331b;
         int secondary = dark ? 0xffbac5b0 : 0xff586450;
-        final Dialog dialog = new Dialog(ui);
-        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+
         LinearLayout panel = new LinearLayout(ui); panel.setOrientation(1);
         panel.setPadding(dp(a,24),dp(a,20),dp(a,24),dp(a,20));
         panel.setBackgroundDrawable(shape(surface,a));
         TextView title=label(ui,"cacTTus 🌵",28,ink); title.setTypeface(null,Typeface.BOLD); panel.addView(title);
+        Button back=new Button(ui);back.setText("‹ Назад");back.setOnClickListener(new View.OnClickListener(){public void onClick(View v){a.finish();}});panel.addView(back);
         panel.addView(label(ui,"Сделай ленту своей",15,secondary));
         final Switch enabled = new Switch(ui); enabled.setText("Подмена страны"); enabled.setTextColor(ink);
-        enabled.setChecked(prefs().getBoolean("override",false)); panel.addView(enabled);
+        enabled.setChecked(prefs().getBoolean("override",true)); panel.addView(enabled);
         final Switch network = new Switch(ui); network.setText("Подменять страну сети");
         network.setTextColor(ink); network.setChecked(prefs().getBoolean("network_override",false));
         panel.addView(network);
@@ -110,15 +109,15 @@ public final class Menu {
         String selected=prefs().getString("region","kz");
         for(int i=0;i<CODES.length;i++) if(CODES[i].equals(selected)) regions.setSelection(i);
         panel.addView(regions,new LinearLayout.LayoutParams(-1,dp(a,56)));
-        panel.addView(label(ui,"Подмена страны отключена по умолчанию: подтверждено, что с ней поиск может возвращать пустые результаты. Выбранный регион применяется только после включения. Настройки не меняют IP-адрес.",14,secondary));
+        panel.addView(label(ui,"Казахстан включён по умолчанию. При подмене страны поиск может не работать. Выбранный регион применяется после перезапуска. Настройки не меняют IP-адрес.",14,secondary));
         Button save=new Button(ui); save.setText("Сохранить"); save.setTextColor(ink);
         save.setBackgroundDrawable(shape(accent,a)); panel.addView(save,new LinearLayout.LayoutParams(-1,dp(a,52)));
         save.setOnClickListener(new View.OnClickListener(){public void onClick(View v){
             prefs().edit().putBoolean("pixel_shift",pixelShift.isChecked()).putBoolean("break_reminder",reminder.isChecked()).putBoolean("network_override",network.isChecked()).putBoolean("override",enabled.isChecked()).putString("region",CODES[regions.getSelectedItemPosition()]).apply();
             ScreenCare.refresh();
-            Toast.makeText(a,"Сохранено. Перезапусти TikTok",Toast.LENGTH_LONG).show(); dialog.dismiss();
+            Toast.makeText(a,"Сохранено. Перезапусти TikTok",Toast.LENGTH_LONG).show(); a.finish();
         }});
-        ScrollView scroll = new ScrollView(ui); scroll.addView(panel); dialog.setContentView(scroll); dialog.show();
-        if(dialog.getWindow()!=null) { dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent); dialog.getWindow().setLayout(Math.min(dp(a,380),a.getResources().getDisplayMetrics().widthPixels-dp(a,32)),-2); }
+        ScrollView scroll = new ScrollView(ui); scroll.setFitsSystemWindows(true); scroll.setFillViewport(true); scroll.setBackgroundColor(surface);
+        scroll.addView(panel); a.setContentView(scroll);
     }
 }

@@ -67,6 +67,7 @@ jobs:
           python3 scripts/inject_menu.py /tmp/decoded /tmp/menu-smali
       - name: Build and sign
         run: |
+          python3 scripts/register_activity.py /tmp/decoded/AndroidManifest.xml
           python3 scripts/seed_dex.py /tmp/source.apk /tmp/decoded
           java -Xmx6g -jar /tmp/apktool.jar b -j 2 /tmp/decoded -o /tmp/cacttus.apk
           java -jar /tmp/signer.jar --apks /tmp/cacttus.apk --out /tmp/output
