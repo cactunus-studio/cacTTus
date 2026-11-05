@@ -1,7 +1,7 @@
 package studio.cactunus.cacttus;
 
 import android.app.*;
-import android.os.Bundle;
+import android.util.Log;
 import android.content.*;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
@@ -29,7 +29,11 @@ public final class Menu {
     public static void settings(final Activity activity) {
         install(activity);
         activity.getWindow().getDecorView().post(new Runnable() {
-            public void run() { attach(activity); }
+            public void run() {
+                try { attach(activity); }
+                catch (RuntimeException error) { Log.e("cacTTus", "Cannot attach settings entry", error); CrashReport.menuError(activity,"Attach settings entry",error); }
+                catch (LinkageError error) { Log.e("cacTTus", "Cannot load settings entry", error); CrashReport.menuError(activity,"Load settings entry",error); }
+            }
         });
     }
     private static int dp(Context c, int v) { return (int)(v*c.getResources().getDisplayMetrics().density+0.5f); }
@@ -48,18 +52,13 @@ public final class Menu {
         button.setBackgroundDrawable(shape(systemColor(a,"system_accent1_100",0xffd9e8c5),a));
         FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(-1,dp(a,64),Gravity.BOTTOM);
         params.setMargins(dp(a,12),0,dp(a,12),dp(a,12));
-        // Reserve space below the settings content for the entry row.
-        ViewGroup container=(ViewGroup)root;
-        for(int i=0;i<container.getChildCount();i++) {
-            View child=container.getChildAt(i);
-            ViewGroup.LayoutParams lp=child.getLayoutParams();
-            if(lp instanceof FrameLayout.LayoutParams) {
-                FrameLayout.LayoutParams fl=(FrameLayout.LayoutParams)lp;
-                fl.bottomMargin += dp(a,88); child.setLayoutParams(fl);
-            }
-        }
-        a.addContentView(button,params);
-        button.setOnClickListener(new View.OnClickListener() { public void onClick(View v) { show(a); } });
+        // Do not resize or reparent TikTok's own Compose/fragment content.
+        ((ViewGroup)root).addView(button,params);
+        button.setOnClickListener(new View.OnClickListener() { public void onClick(View v) {
+            try { show(a); }
+            catch (RuntimeException error) { Log.e("cacTTus", "Cannot open menu", error); CrashReport.menuError(a,"Open menu",error); }
+            catch (LinkageError error) { Log.e("cacTTus", "Cannot load menu", error); CrashReport.menuError(a,"Load menu",error); }
+        } });
     }
     private static TextView label(Context c, String text, int size, int color) {
         TextView v = new TextView(c); v.setText(text); v.setTextSize(size); v.setTextColor(color);
@@ -67,7 +66,9 @@ public final class Menu {
     }
     private static int systemColor(Context c, String name, int fallback) {
         int id = c.getResources().getIdentifier(name, "color", "android");
-        return id == 0 ? fallback : c.getResources().getColor(id);
+        if (id == 0) return fallback;
+        try { return c.getResources().getColor(id); }
+        catch (android.content.res.Resources.NotFoundException error) { return fallback; }
     }
     private static void show(final Activity a) {
         boolean dark = (a.getResources().getConfiguration().uiMode & 48) == 32;

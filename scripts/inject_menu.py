@@ -7,7 +7,7 @@ import sys
 root, compiled = map(pathlib.Path, sys.argv[1:])
 activity, = root.glob('smali*/com/ss/android/ugc/aweme/splash/SplashActivity.smali')
 s = activity.read_text()
-call = '    invoke-static {p0}, Lstudio/cactunus/cacttus/Menu;->install(Landroid/app/Activity;)V'
+call = '    invoke-static {p0}, Lstudio/cactunus/cacttus/Entry;->install(Landroid/app/Activity;)V'
 if call in s:
     raise SystemExit('Menu already installed')
 s, count = re.subn(r'(    invoke-super \{p0, p1\}, [^\n]+->onCreate\(Landroid/os/Bundle;\)V)',lambda m:m[1]+'\n\n'+call,s)
@@ -21,12 +21,12 @@ for name, register in [('smali_classes2/X/03NM.smali','v7'),('smali_classes4/X/0
     if source.count(old) != 1:
         raise SystemExit(f'{name}: expected one region patch')
     method = 'networkCountry' if 'classes20/' in name else 'simCountry'
-    new = f'    invoke-static {{{register}}}, Lstudio/cactunus/cacttus/Menu;->{method}(Ljava/lang/String;)Ljava/lang/String;\n\n    move-result-object {register}'
+    new = f'    invoke-static {{{register}}}, Lstudio/cactunus/cacttus/Entry;->{method}(Ljava/lang/String;)Ljava/lang/String;\n\n    move-result-object {register}'
     changes.append((p,source.replace(old,new)))
 settings, = root.glob('smali*/com/ss/android/ugc/aweme/setting/ui/SettingContainerActivity.smali')
 source = settings.read_text()
 source, count = re.subn(r'(    invoke-super \{p0\}, [^\n]+->onResume\(\)V)',
-    lambda m: m[1]+'\n\n    invoke-static {p0}, Lstudio/cactunus/cacttus/Menu;->settings(Landroid/app/Activity;)V', source)
+    lambda m: m[1]+'\n\n    invoke-static {p0}, Lstudio/cactunus/cacttus/Entry;->settings(Landroid/app/Activity;)V', source)
 if count != 1:
     raise SystemExit(f'Expected one settings hook, found {count}')
 changes.append((settings, source))

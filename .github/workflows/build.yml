@@ -51,7 +51,8 @@ jobs:
           echo '84072541cbb711eff89f7277100ff854929a446dba7ceb1b195c340e0b4fd3cb  /tmp/android.jar' | sha256sum -c
           echo '05cc22a24e7982970f63a405fc6c820bc80b806f27f3c5a6236fc475f8f7152b  /tmp/ecj.jar' | sha256sum -c
           echo '58366f77067207c39a17d469de7b05701d2877212a9c55201bcb0af43e59e903  /tmp/r8.jar' | sha256sum -c
-          java -jar /tmp/ecj.jar -8 -nowarn -cp /tmp/android.jar -d /tmp/menu-classes menu/src/studio/cactunus/cacttus/Menu.java
+          bash scripts/test_entry.sh /tmp/ecj.jar
+          java -jar /tmp/ecj.jar -8 -nowarn -cp /tmp/android.jar -d /tmp/menu-classes menu/src/studio/cactunus/cacttus/*.java
           mkdir /tmp/menu-dex
           java -cp /tmp/r8.jar com.android.tools.r8.D8 --min-api 23 --lib /tmp/android.jar --output /tmp/menu-dex /tmp/menu-classes/studio/cactunus/cacttus/*.class
           (cd /tmp/menu-dex && zip /tmp/menu.apk classes.dex)
