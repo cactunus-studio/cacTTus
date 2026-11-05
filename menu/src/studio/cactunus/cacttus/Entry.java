@@ -43,6 +43,11 @@ public final class Entry {
             String method=(String)request.getClass().getMethod("getMethod").invoke(request);
             if("POST".equals(method)){
                 Object body=request.getClass().getMethod("getRequestBody").invoke(request);
+                Object transport=request.getClass().getField("body").get(request);
+                if(transport!=null){
+                    if(!transport.getClass().getName().equals("X.0OxD"))return request;
+                    body=transport.getClass().getField("LIZ").get(transport);
+                }
                 if(body!=null&&body.getClass().getName().equals("X.07Hx")){
                     java.util.List<String> names=(java.util.List<String>)body.getClass().getField("LIZ").get(body);
                     java.util.List<String> values=(java.util.List<String>)body.getClass().getField("LIZIZ").get(body);
@@ -65,6 +70,8 @@ public final class Entry {
                 Object output=Class.forName("X.0OxD",true,loader).getConstructor(bodyContract).newInstance(newBody);
                 Class<?> outputContract=Class.forName("com.bytedance.retrofit2.mime.TypedOutput",false,loader);
                 builder.getClass().getMethod("LIZIZ",outputContract,String.class).invoke(builder,output,method);
+                java.lang.reflect.Field metadata=builder.getClass().getField("LJ");
+                metadata.setAccessible(true);metadata.set(builder,newBody);
             }
             return builder.getClass().getMethod("LIZ").invoke(builder);
         }catch(ReflectiveOperationException error){report(error);return request;}

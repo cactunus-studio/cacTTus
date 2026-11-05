@@ -42,8 +42,8 @@ source=interceptor.read_text()
 pattern=r'(invoke-interface \{v0\}, LX/0EA3;->getCurrentRegionCode\(\)Ljava/lang/String;\s*(?:\.line \d+\s*)*move-result-object v0)'
 source,count=re.subn(pattern,lambda m:m[1]+'\n\n    invoke-static {v3, v0}, Lstudio/cactunus/cacttus/Entry;->searchRegion(Ljava/lang/Object;Ljava/lang/String;)Ljava/lang/String;\n    move-result-object v0',source)
 if count!=1:raise SystemExit(f'Expected one priority_region source, found {count}')
-pattern=r'(iget-object v3, v0, LX/061i;->LIZJ:Lcom/bytedance/retrofit2/client/Request;)'
-source,count=re.subn(pattern,lambda m:m[1]+'\n\n    invoke-static {v3}, Lstudio/cactunus/cacttus/Entry;->searchRequest(Ljava/lang/Object;)Ljava/lang/Object;\n    move-result-object v3\n    check-cast v3, Lcom/bytedance/retrofit2/client/Request;',source)
+pattern=r'(    invoke-virtual \{p1, v3\}, LX/061i;->LIZ\(Lcom/bytedance/retrofit2/client/Request;\)LX/05nf;)'
+source,count=re.subn(pattern,lambda m:'    invoke-static {v3}, Lstudio/cactunus/cacttus/Entry;->searchRequest(Ljava/lang/Object;)Ljava/lang/Object;\n    move-result-object v3\n    check-cast v3, Lcom/bytedance/retrofit2/client/Request;\n\n'+m[1],source)
 if count!=1:raise SystemExit(f'Expected one request entry, found {count}')
 changes.append((interceptor,source))
 fragment, = root.glob('smali*/com/ss/android/ugc/aweme/search/pages/result/common/core/ui/fragment/SearchFragment.smali')
