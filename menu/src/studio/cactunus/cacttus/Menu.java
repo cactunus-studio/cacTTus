@@ -14,8 +14,8 @@ public final class Menu {
     private static final String[] NAMES = {"Казахстан", "США", "Германия", "Турция", "Великобритания", "Япония"};
     private static SharedPreferences prefs() { return app.getSharedPreferences("cacttus", 0); }
     public static String country(String original) {
-        if (app == null) return "kz";
-        if (!prefs().getBoolean("override", true)) return original;
+        if (app == null) return original;
+        if (!prefs().getBoolean("override", false)) return original;
         String code = prefs().getString("region", "kz");
         for (String c : CODES) if (c.equals(code)) return code;
         return "kz";
@@ -25,7 +25,14 @@ public final class Menu {
         if (app == null || !prefs().getBoolean("network_override", false)) return original;
         return country(original);
     }
-    public static void install(Activity activity) { app = activity.getApplication(); }
+    public static void install(Activity activity) {
+        app = activity.getApplication();
+        // One-time migration: the old default breaks search on reported devices.
+        if (!prefs().getBoolean("search_safe_v1",false)) {
+            prefs().edit().putBoolean("override",false).putBoolean("network_override",false)
+                .putBoolean("search_safe_v1",true).apply();
+        }
+    }
     public static void settings(final Activity activity) {
         install(activity);
         activity.getWindow().getDecorView().post(new Runnable() {
@@ -86,7 +93,7 @@ public final class Menu {
         TextView title=label(ui,"cacTTus 🌵",28,ink); title.setTypeface(null,Typeface.BOLD); panel.addView(title);
         panel.addView(label(ui,"Сделай ленту своей",15,secondary));
         final Switch enabled = new Switch(ui); enabled.setText("Подмена страны"); enabled.setTextColor(ink);
-        enabled.setChecked(prefs().getBoolean("override",true)); panel.addView(enabled);
+        enabled.setChecked(prefs().getBoolean("override",false)); panel.addView(enabled);
         final Switch network = new Switch(ui); network.setText("Подменять страну сети");
         network.setTextColor(ink); network.setChecked(prefs().getBoolean("network_override",false));
         panel.addView(network);
@@ -103,7 +110,7 @@ public final class Menu {
         String selected=prefs().getString("region","kz");
         for(int i=0;i<CODES.length;i++) if(CODES[i].equals(selected)) regions.setSelection(i);
         panel.addView(regions,new LinearLayout.LayoutParams(-1,dp(a,56)));
-        panel.addView(label(ui,"Страна сети по умолчанию не меняется. Если поиск не работает, отключи подмену страны и перезапусти TikTok. Настройки не меняют IP-адрес.",14,secondary));
+        panel.addView(label(ui,"Подмена страны отключена по умолчанию: подтверждено, что с ней поиск может возвращать пустые результаты. Выбранный регион применяется только после включения. Настройки не меняют IP-адрес.",14,secondary));
         Button save=new Button(ui); save.setText("Сохранить"); save.setTextColor(ink);
         save.setBackgroundDrawable(shape(accent,a)); panel.addView(save,new LinearLayout.LayoutParams(-1,dp(a,52)));
         save.setOnClickListener(new View.OnClickListener(){public void onClick(View v){
