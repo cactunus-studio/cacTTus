@@ -14,7 +14,7 @@ public final class Menu {
     private static final String[] NAMES = {"Казахстан", "США", "Германия", "Турция", "Великобритания", "Япония"};
     private static SharedPreferences prefs() { return app.getSharedPreferences("cacttus", 0); }
     public static String country(String original) {
-        if (app == null) return original;
+        if (app == null) return "kz";
         if (!prefs().getBoolean("override", true)) return original;
         String code = prefs().getString("region", "kz");
         for (String c : CODES) if (c.equals(code)) return code;
