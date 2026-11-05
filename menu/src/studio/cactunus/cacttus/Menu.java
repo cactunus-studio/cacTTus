@@ -71,7 +71,8 @@ public final class Menu {
     }
     private static void show(final Activity a) {
         boolean dark = (a.getResources().getConfiguration().uiMode & 48) == 32;
-        final Context ui = new ContextThemeWrapper(a, dark ? android.R.style.Theme_Holo : android.R.style.Theme_Holo_Light);
+        int theme = a.getResources().getIdentifier(dark ? "Theme.Material.NoActionBar" : "Theme.Material.Light.NoActionBar", "style", "android");
+        final Context ui = new ContextThemeWrapper(a, theme != 0 ? theme : (dark ? android.R.style.Theme_Holo : android.R.style.Theme_Holo_Light));
         int surface = systemColor(a, dark ? "system_neutral1_900" : "system_neutral1_10", dark ? 0xff1d211a : 0xfff4f7ed);
         int accent = systemColor(a, dark ? "system_accent1_700" : "system_accent1_100", dark ? 0xff384b2e : 0xffd9e8c5);
         int ink = dark ? 0xffe2ead9 : 0xff20331b;
