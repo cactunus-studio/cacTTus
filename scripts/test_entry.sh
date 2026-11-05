@@ -6,6 +6,7 @@ trap 'rm -rf "$test_classes"' EXIT
 java -jar "$compiler" -8 -nowarn -d "$test_classes" \
   tests/java/android/app/Activity.java tests/java/android/util/Log.java \
   tests/java/studio/cactunus/cacttus/Menu.java \
+  menu/src/studio/cactunus/cacttus/SearchRouting.java \
   tests/java/studio/cactunus/cacttus/ScreenCare.java \
   tests/java/studio/cactunus/cacttus/SearchDiagnostics.java \
   tests/java/studio/cactunus/cacttus/ScreenCarePolicyTest.java \
@@ -27,3 +28,6 @@ java -jar "$compiler" -8 -nowarn -cp "$test_classes" -d "$test_classes" \
   tests/java/studio/cactunus/cacttus/SearchDiagnosticsTest.java \
   menu/src/studio/cactunus/cacttus/SearchDiagnostics.java
 java -cp "$test_classes" studio.cactunus.cacttus.SearchDiagnosticsTest
+
+java -jar "$compiler" -8 -nowarn -d "$test_classes" menu/src/studio/cactunus/cacttus/SearchRouting.java tests/java/studio/cactunus/cacttus/SearchRoutingTest.java
+java -cp "$test_classes" studio.cactunus.cacttus.SearchRoutingTest

@@ -15,6 +15,8 @@ class InjectionTest(unittest.TestCase):
           'smali_classes2/X/03NM.smali': '    const-string v7, "kz"',
           'smali_classes4/X/06VU.smali': '    const-string v0, "kz"',
           'smali_classes8/com/ss/android/ugc/aweme/discover/model/SearchApiResult.smali': '.method public getSearchNilInfo()Lcom/ss/android/ugc/aweme/discover/model/SearchNilInfo;\n    .locals 1\n.end method\n.method public getSearchNilText()Lcom/ss/android/ugc/aweme/discover/model/SearchNilText;\n    .locals 1\n.end method',
+          'smali_classes36/com/ss/android/ugc/aweme/foundation/network/interceptor/CommonParamInterceptor.smali': 'invoke-interface {v0}, LX/0EA3;->getCurrentRegionCode()Ljava/lang/String;\n.line 1\nmove-result-object v0',
+          'smali_classes9/com/ss/android/ugc/aweme/search/pages/result/common/core/ui/fragment/SearchFragment.smali': '.method public static R00(Lcom/ss/android/ugc/aweme/search/pages/result/common/core/ui/fragment/SearchFragment;ZLcom/ss/android/ugc/aweme/discover/model/SearchApiResult;Ljava/lang/Exception;ZI)V\n    .locals 16',
           'smali_classes20/X/0fk3.smali': '    const-string v0, "kz"',
         }
         for name,text in paths.items():

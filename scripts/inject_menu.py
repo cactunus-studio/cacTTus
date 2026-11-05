@@ -37,6 +37,18 @@ for getter, result in [('getSearchNilInfo','Lcom/ss/android/ugc/aweme/discover/m
     source,count=re.subn(pattern,lambda m:m[1]+'\n\n    invoke-static {p0}, Lstudio/cactunus/cacttus/Entry;->searchResult(Ljava/lang/Object;)V',source)
     if count!=1:raise SystemExit(f'Expected one {getter}, found {count}')
 changes.append((response,source))
+interceptor, = root.glob('smali*/com/ss/android/ugc/aweme/foundation/network/interceptor/CommonParamInterceptor.smali')
+source=interceptor.read_text()
+pattern=r'(invoke-interface \{v0\}, LX/0EA3;->getCurrentRegionCode\(\)Ljava/lang/String;\s*(?:\.line \d+\s*)*move-result-object v0)'
+source,count=re.subn(pattern,lambda m:m[1]+'\n\n    invoke-static {v3, v0}, Lstudio/cactunus/cacttus/Entry;->searchRegion(Ljava/lang/Object;Ljava/lang/String;)Ljava/lang/String;\n    move-result-object v0',source)
+if count!=1:raise SystemExit(f'Expected one priority_region source, found {count}')
+changes.append((interceptor,source))
+fragment, = root.glob('smali*/com/ss/android/ugc/aweme/search/pages/result/common/core/ui/fragment/SearchFragment.smali')
+source=fragment.read_text()
+pattern=r'(\.method public static R00\(Lcom/ss/android/ugc/aweme/search/pages/result/common/core/ui/fragment/SearchFragment;ZLcom/ss/android/ugc/aweme/discover/model/SearchApiResult;Ljava/lang/Exception;ZI\)V\n    \.locals 16)'
+source,count=re.subn(pattern,lambda m:m[1]+'\n\n    invoke-static/range {p2 .. p3}, Lstudio/cactunus/cacttus/Entry;->searchEvent(Ljava/lang/Object;Ljava/lang/Throwable;)V',source)
+if count!=1:raise SystemExit(f'Expected one search error handler, found {count}')
+changes.append((fragment,source))
 # The menu goes in its own DEX to avoid overflowing existing method references.
 destination = root/'smali_classes58'
 if destination.exists():

@@ -26,6 +26,21 @@ public final class Entry {
         catch (RuntimeException error) { report(error); return original; }
         catch (LinkageError error) { report(error); return original; }
     }
+    public static String searchRegion(Object request,String original) {
+        try {
+            String url=(String)request.getClass().getMethod("getUrl").invoke(request);
+            String selected=SearchRouting.choose(url,original,Menu.country(original));
+            if(SearchRouting.isSearch(url))SearchDiagnostics.routing(original,selected);
+            return selected;
+        } catch (ReflectiveOperationException error) { report(error);return original; }
+        catch (RuntimeException error) { report(error);return original; }
+        catch (LinkageError error) { report(error);return original; }
+    }
+    public static void searchEvent(Object response,Throwable error) {
+        try { SearchDiagnostics.event(response,error); }
+        catch (RuntimeException unavailable) { report(unavailable); }
+        catch (LinkageError unavailable) { report(unavailable); }
+    }
     public static void searchResult(Object response) {
         try { SearchDiagnostics.record(response); }
         catch (RuntimeException error) { report(error); }
